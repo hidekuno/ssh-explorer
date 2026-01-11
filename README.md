@@ -48,11 +48,11 @@ npm run dev
 
 input http://localhost:5173/ on browser
 
-<img width="30%" height="30%" alt="Image" src="https://github.com/user-attachments/assets/32ca6f38-64b8-4ff5-beb9-2146559876fa" />
+<img width="30%" height="30%" alt="Image" src="https://github.com/user-attachments/assets/2fd5af7a-4780-41ff-970a-3729ba3c46b2" />
 
 input connection information, click connect button
 
-<img width="30%" height="30%" alt="Image" src="https://github.com/user-attachments/assets/69c0379d-5d0e-4ed5-830e-4ec4b819e3c9" />
+<img width="30%" height="30%" alt="Image" src="https://github.com/user-attachments/assets/e627ffa2-512b-472f-bd53-3c1d0757c7eb" />
 
 lint & build
 ```
