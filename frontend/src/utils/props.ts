@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { TreeViewBaseItem } from '@mui/x-tree-view/models';
-import { CustomTreeItemProps } from './treeItem';
+import { CustomTreeItemProps } from './components/TreeItem';
 import { FileType } from '../utils/type';
 
 
@@ -25,6 +25,6 @@ export type ExtendedTreeItemProps = {
   fullpath: string;
   checked?: boolean;
   expanded?: boolean;
-  parent?: TreeViewBaseItem<ExtendedTreeItemProps>|null;
+  parent?: TreeViewBaseItem<ExtendedTreeItemProps> | null;
   children?: TreeViewBaseItem<ExtendedTreeItemProps>[];
 };

@@ -25,7 +25,7 @@ uv python install 3.13
 
 install & run
 ```
-cd ~/ssh-explorer/frontend/
+cd ~/ssh-explorer/backend/
 uv sync --frozen --no-cache
 uv run uvicorn main:app --port=8000
   or

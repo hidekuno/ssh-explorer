@@ -21,7 +21,7 @@ type SshFormState = {
   privateKeyPath: string;
 };
 
-const makeRequestData = (path: string, form:SshFormState) => {
+const makeRequestData = (path: string, form: SshFormState) => {
 
   const data = {
     path: path,
@@ -66,9 +66,9 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
 
   const handleTextChange =
     (key: keyof SshFormState) =>
-    (e: ChangeEvent<HTMLInputElement>) => {
-      setForm({ ...form, [key]: e.target.value });
-    };
+      (e: ChangeEvent<HTMLInputElement>) => {
+        setForm({ ...form, [key]: e.target.value });
+      };
 
   const handleItemExpansionToggle = (
     _event: React.SyntheticEvent,
@@ -89,7 +89,7 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
     setHost(form.host); // Trigger useEffect for initial fetch
   };
 
-  const handleItemClick = ( _event: React.SyntheticEvent, itemId: string) => {
+  const handleItemClick = (_event: React.SyntheticEvent, itemId: string) => {
     console.log('handleItemClick', itemId);
     const item = apiRef.current!.getItem(itemId);
     if (item != null && canGetServerFiles(item)) {
@@ -101,9 +101,9 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
     current_dir: string,
     data: [string, string][],
     fileType: FileType,
-    parent: TreeViewBaseItem<ExtendedTreeItemProps>|null) => {
+    parent: TreeViewBaseItem<ExtendedTreeItemProps> | null) => {
 
-    for (const [file,datetime] of data) {
+    for (const [file, datetime] of data) {
       const fullpath = current_dir + '/' + file;
       items.push({
         id: fullpath,
@@ -180,83 +180,137 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
     } else if (treeData.length === 0 && host) {
       // Initial fetch after clicking "Connect"
       console.log('useEffect: initial fetch for host', host);
-      fetchAndUpdateTree(homedir);
+      fetchAndUpdateTree(homedir || '.');
     }
   }, [lastSelectedItem, host]);
 
   return (
-    <Box sx={{ width: '100%', bgcolor: 'background.paper' }}>
-      <Box sx={{ display: "grid", gridTemplateColumns: "2fr 0.6fr 1.2fr 2fr 1fr", gap: 2 }}>
-        <TextField
-          label="SSH Host"
-          fullWidth
-          value={form.host}
-          onChange={handleTextChange("host")}
-        />
-        <TextField
-          label="Port"
-          fullWidth
-          value={form.port}
-          onChange={handleTextChange("port")}
-          placeholder="22"
-        />
-        <TextField
-          label="User"
-          fullWidth
-          value={form.user}
-          onChange={handleTextChange("user")}
-        />
-        <TextField
-          label="Privatekey Path"
-          fullWidth
-          value={form.privateKeyPath}
-          onChange={handleTextChange("privateKeyPath")}
-          placeholder="~/.ssh/id_rsa"
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleConnect}
-        >
-          Connect
-        </Button>
+    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* Connection Panel */}
+      <Box
+        component="div"
+        sx={{
+          p: 3,
+          borderRadius: 2,
+          bgcolor: 'background.paper',
+          boxShadow: 4,
+          border: 1,
+          borderColor: 'divider',
+          backdropFilter: 'blur(10px)', // Glass effect
+        }}
+      >
+        <Typography variant="h6" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          SSH Connection
+        </Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "2fr 0.6fr 1.2fr 2fr 1fr" }, gap: 2 }}>
+          <TextField
+            label="SSH Host"
+            fullWidth
+            value={form.host}
+            onChange={handleTextChange("host")}
+            variant="outlined"
+            size="small"
+          />
+          <TextField
+            label="Port"
+            fullWidth
+            value={form.port}
+            onChange={handleTextChange("port")}
+            placeholder="22"
+            variant="outlined"
+            size="small"
+          />
+          <TextField
+            label="User"
+            fullWidth
+            value={form.user}
+            onChange={handleTextChange("user")}
+            variant="outlined"
+            size="small"
+          />
+          <TextField
+            label="Privatekey Path"
+            fullWidth
+            value={form.privateKeyPath}
+            onChange={handleTextChange("privateKeyPath")}
+            placeholder="~/.ssh/id_rsa"
+            variant="outlined"
+            size="small"
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleConnect}
+            size="medium"
+            sx={{ height: '100%' }}
+          >
+            Connect
+          </Button>
+        </Box>
       </Box>
 
-      <Typography sx={{marginTop: '1.5rem'}} variant="h6" gutterBottom>{homedir}</Typography>
+      {/* File Explorer Panel */}
+      <Box
+        component="div"
+        sx={{
+          p: 0,
+          borderRadius: 2,
+          bgcolor: 'transparent',
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '600px',
+        }}
+      >
+        {homedir && (
+          <Box sx={{ mb: 1, ml: 1 }}>
+            <Typography variant="subtitle1" color="text.secondary">
+              Current Directory: <Typography component="span" color="primary.light">{homedir}</Typography>
+            </Typography>
+          </Box>
+        )}
 
-      <RichTreeView
-          items={treeData}
-          sx={{
-            marginLeft: '2.5rem',
-            borderRadius: 1,
-            border: 1,
-            borderColor: 'grey.500',
-            borderStyle: 'solid',
-            height: '600px',
-            flexGrow: 1,
-            minWidth: 1024,
-            maxWidth: 1024,
-            overflowY: 'auto' }}
-          slots={{ item: props.component }}
-          onItemExpansionToggle={handleItemExpansionToggle}
-          onExpandedItemsChange={handleExpandedItemsChange}
-          expandedItems={expandedItems}
-          onItemClick={handleItemClick}
-          apiRef={apiRef}
-          checkboxSelection={props.checkbox}
-        />
-        {loading && <CircularProgress sx={{ position: 'fixed', top: '50%', left: '50%' }} />}
+        <Box sx={{
+          flexGrow: 1,
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          border: 1,
+          borderColor: 'divider',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <RichTreeView
+            items={treeData}
+            sx={{
+              p: 2,
+              flexGrow: 1,
+              overflowY: 'auto',
+              minHeight: '500px'
+            }}
+            slots={{ item: props.component }}
+            onItemExpansionToggle={handleItemExpansionToggle}
+            onExpandedItemsChange={handleExpandedItemsChange}
+            expandedItems={expandedItems}
+            onItemClick={handleItemClick}
+            apiRef={apiRef}
+            checkboxSelection={props.checkbox}
+          />
+        </Box>
+      </Box>
 
-        <Snackbar
-          open={openSnackbar}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+      {loading && <CircularProgress sx={{ position: 'fixed', top: '50%', left: '50%', zIndex: 9999 }} />}
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -78,9 +78,9 @@ const StyledTreeItemLabelText = styled(Typography)({
   fontSize: '1rem',
 }) as unknown as typeof Typography;
 
-interface CustomTreeItemProps
+export interface CustomTreeItemProps
   extends Omit<UseTreeItem2Parameters, 'rootRef'>,
-    Omit<React.HTMLAttributes<HTMLLIElement>, 'onFocus'> {}
+  Omit<React.HTMLAttributes<HTMLLIElement>, 'onFocus'> { }
 
 export const TreeItem = React.forwardRef(function CustomTreeItem(
   props: CustomTreeItemProps,
@@ -115,7 +115,7 @@ export const TreeItem = React.forwardRef(function CustomTreeItem(
     for (const child of item.children) {
       setAllChecked(child, checked);
     }
-    for(let parent = item.parent; parent; parent = parent.parent){
+    for (let parent = item.parent; parent; parent = parent.parent) {
       if (parent.children) {
         parent.checked = parent.children.some((child: ExtendedTreeItemProps) => child.checked);
       }
@@ -167,11 +167,12 @@ export const TreeItem = React.forwardRef(function CustomTreeItem(
         })}>
 
         {!item.excluded &&
-        <TreeItem2Checkbox {...getCheckboxProps({
-          id: itemId,
-          checked: item.checked,
-          onChange: handleChange,
-          size: 'small' })} />
+          <TreeItem2Checkbox {...getCheckboxProps({
+            id: itemId,
+            checked: item.checked,
+            onChange: handleChange,
+            size: 'small'
+          })} />
         }
         {item.excluded && <DoNotDisturb color='error' sx={{ ml: 0.3, mr: 0.1, fontSize: '1.1rem' }} />}
         <CustomLabel {...getLabelProps({ icon, })} />
