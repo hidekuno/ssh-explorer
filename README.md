@@ -28,8 +28,6 @@ install & run
 cd ~/ssh-explorer/backend/
 uv sync --frozen --no-cache
 uv run uvicorn main:app --port=8000
-  or
-  uv run uvicorn main:app --port=8000 --reload
 ```
 
 docker build & run
@@ -48,11 +46,11 @@ npm run dev
 
 input http://localhost:5173/ on browser
 
-<img width="30%" height="30%" alt="Image" src="https://github.com/user-attachments/assets/2fd5af7a-4780-41ff-970a-3729ba3c46b2" />
+<img width="30%" height="30%" alt="image" src="https://github.com/user-attachments/assets/8ec9fc21-f0b5-4c62-a397-7fa4c86ced0b" />
 
 input connection information, click connect button
 
-<img width="30%" height="30%" alt="Image" src="https://github.com/user-attachments/assets/e627ffa2-512b-472f-bd53-3c1d0757c7eb" />
+<img width="30%" height="30%" alt="image" src="https://github.com/user-attachments/assets/dbf62e14-c6c0-4845-9a15-ec6872ab0def" />
 
 lint & build
 ```
