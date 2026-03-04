@@ -9,7 +9,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { useTheme } from '@mui/material/styles';
 import { PaletteMode } from '@mui/material';
 
 interface AppLayoutProps {
@@ -47,9 +46,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, mode, toggleColo
                         <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
                             <IconButton
                                 size="large"
-                                aria-label="account of current user"
-                                aria-controls="menu-appbar"
-                                aria-haspopup="true"
+                                aria-label="open menu"
                                 color="inherit"
                             >
                                 <MenuIcon />
@@ -60,7 +57,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, mode, toggleColo
                             variant="h5"
                             noWrap
                             component="a"
-                            href=""
+                            href="/"
                             sx={{
                                 mr: 2,
                                 display: { xs: 'flex', md: 'none' },
