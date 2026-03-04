@@ -4,17 +4,17 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useTreeItem2 } from '@mui/x-tree-view/useTreeItem2';
 import DoNotDisturb from '@mui/icons-material/DoNotDisturb';
-import { TreeItem2Checkbox, TreeItem2Label } from '@mui/x-tree-view/TreeItem2';
+import { TreeItem2Checkbox, TreeItem2Label, TreeItem2Content } from '@mui/x-tree-view/TreeItem2';
 import { TreeItem2Provider } from '@mui/x-tree-view/TreeItem2Provider';
 import { TreeItem2DragAndDropOverlay } from '@mui/x-tree-view/TreeItem2DragAndDropOverlay';
 import { getIconFromFileType } from '../utils/type';
-import { ExtendedTreeItemProps } from '../utils/props';
+import { ExtendedTreeItemProps, CustomTreeItemProps } from '../utils/props';
+import { TreeDataContext } from '../utils/context';
 import { animated, useSpring } from '@react-spring/web';
 import { styled, alpha } from '@mui/material/styles';
 import { TransitionProps } from '@mui/material/transitions';
 import Collapse from '@mui/material/Collapse';
-import { UseTreeItem2Parameters } from '@mui/x-tree-view/useTreeItem2';
-import { TreeItem2Content } from '@mui/x-tree-view/TreeItem2';
+import { TreeViewBaseItem } from '@mui/x-tree-view/models';
 
 
 declare module 'react' {
@@ -23,6 +23,7 @@ declare module 'react' {
     '--tree-view-bg-color'?: string;
   }
 }
+
 const CustomTreeItemContent = styled(TreeItem2Content)(({ theme }) => ({
   borderRadius: theme.spacing(0.7),
   marginBottom: theme.spacing(0.05),
@@ -61,6 +62,7 @@ const CustomTreeItemContent = styled(TreeItem2Content)(({ theme }) => ({
 }));
 
 const AnimatedCollapse = animated(Collapse);
+
 function TransitionComponent(props: TransitionProps) {
   const style = useSpring({
     to: {
@@ -68,7 +70,6 @@ function TransitionComponent(props: TransitionProps) {
       transform: `translate3d(0,${props.in ? 0 : 20}px,0)`,
     },
   });
-
   return <AnimatedCollapse style={style} {...props} />;
 }
 
@@ -78,9 +79,47 @@ const StyledTreeItemLabelText = styled(Typography)({
   fontSize: '1rem',
 }) as unknown as typeof Typography;
 
-export interface CustomTreeItemProps
-  extends Omit<UseTreeItem2Parameters, 'rootRef'>,
-  Omit<React.HTMLAttributes<HTMLLIElement>, 'onFocus'> { }
+// モジュールレベルに移動: レンダーのたびに再生成されなくなる
+interface CustomLabelProps {
+  children: React.ReactNode;
+  icon?: React.ElementType;
+}
+
+function CustomLabel({ icon: Icon, children, ...other }: CustomLabelProps) {
+  return (
+    <TreeItem2Label
+      {...other}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      {Icon && (
+        <Box
+          component={Icon}
+          className="labelIcon"
+          color="inherit"
+          sx={{ mr: 1, fontSize: '1.2rem' }}
+        />
+      )}
+      <StyledTreeItemLabelText textAlign="left" variant="body2">{children}</StyledTreeItemLabelText>
+    </TreeItem2Label>
+  );
+}
+
+// モジュールレベルに移動: React stateに依存しないため
+const setAllChecked = (item: TreeViewBaseItem<ExtendedTreeItemProps>, checked: boolean): void => {
+  item.checked = checked;
+  if (item.children == null) return;
+  for (const child of item.children) {
+    setAllChecked(child, checked);
+  }
+  for (let parent = item.parent; parent; parent = parent.parent) {
+    if (parent.children) {
+      parent.checked = parent.children.some((child) => child.checked);
+    }
+  }
+};
 
 export const TreeItem = React.forwardRef(function CustomTreeItem(
   props: CustomTreeItemProps,
@@ -99,60 +138,17 @@ export const TreeItem = React.forwardRef(function CustomTreeItem(
   } = useTreeItem2({ id, itemId, children, label, disabled, rootRef: ref });
 
   const item = publicAPI.getItem(itemId);
-  const icon = getIconFromFileType(item);
+  // item.expanded のミューテーションに依存せず、ツリービューの実際の状態を使う
+  const icon = getIconFromFileType({ ...item, expanded: status.expanded });
   const secondaryLabel = item.secondaryLabel;
 
-  interface CustomLabelProps {
-    children: React.ReactNode;
-    icon?: React.ElementType;
-  }
-
-  const setAllChecked = (item: ExtendedTreeItemProps, checked: boolean) => {
-    item.checked = checked;
-    if ((item.children == null)) {
-      return;
-    }
-    for (const child of item.children) {
-      setAllChecked(child, checked);
-    }
-    for (let parent = item.parent; parent; parent = parent.parent) {
-      if (parent.children) {
-        parent.checked = parent.children.some((child: ExtendedTreeItemProps) => child.checked);
-      }
-    }
-  };
+  // チェックボックス変更後に TreeFileExplorer 側の再レンダリングをトリガーする
+  const triggerUpdate = React.useContext(TreeDataContext);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('handleChange');
-    const item = publicAPI.getItem(event.target.id);
     setAllChecked(item, event.target.checked);
+    triggerUpdate();
   };
-  function CustomLabel({
-    icon: Icon,
-    children,
-    ...other
-  }: CustomLabelProps) {
-
-    return (
-      <TreeItem2Label
-        {...other}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        {Icon && (
-          <Box
-            component={Icon}
-            className="labelIcon"
-            color="inherit"
-            sx={{ mr: 1, fontSize: '1.2rem' }}
-          />
-        )}
-        <StyledTreeItemLabelText textAlign="left" variant="body2">{children}</StyledTreeItemLabelText>
-      </TreeItem2Label>
-    );
-  }
 
   return (
     <TreeItem2Provider itemId={itemId}>
@@ -175,7 +171,7 @@ export const TreeItem = React.forwardRef(function CustomTreeItem(
           })} />
         }
         {item.excluded && <DoNotDisturb color='error' sx={{ ml: 0.3, mr: 0.1, fontSize: '1.1rem' }} />}
-        <CustomLabel {...getLabelProps({ icon, })} />
+        <CustomLabel {...getLabelProps({ icon })} />
         <TreeItem2DragAndDropOverlay {...getDragAndDropOverlayProps()} />
 
         <Typography textAlign="right" variant="subtitle2" sx={{ width: 300, mr: 0, opacity: 0.8, fontSize: '0.8rem' }}>
