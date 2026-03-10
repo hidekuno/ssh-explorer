@@ -9,14 +9,14 @@ import Alert from '@mui/material/Alert';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { TreeViewBaseItem } from '@mui/x-tree-view/models';
 import { useTreeViewApiRef } from '@mui/x-tree-view/hooks';
-import { TextField, Button } from "@mui/material";
+import { TextField, Button } from '@mui/material';
 import { TreeProps, ExtendedTreeItemProps } from '../utils/props';
 import { FileType } from '../utils/type';
 import { TreeDataContext } from '../utils/context';
 
 type SshFormState = {
   host: string;
-  port: string;
+  port: number;
   user: string;
   privateKeyPath: string;
 };
@@ -25,8 +25,8 @@ const makeRequestData = (path: string, form: SshFormState) => ({
   path,
   host: form.host,
   user: form.user,
-  port: form.port,
-  ssh_private_key: form.privateKeyPath,
+  port: Number(form.port),
+  ssh_private_key_name: form.privateKeyPath,
   up: false,
 });
 
@@ -73,10 +73,10 @@ const updateTreeItem = (
 
 export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
   const [form, setForm] = React.useState<SshFormState>({
-    host: "",
-    port: "",
-    user: "",
-    privateKeyPath: "",
+    host: '',
+    port: 22,
+    user: '',
+    privateKeyPath: '',
   });
 
   // formRef により fetchAndUpdateTree の useCallback 依存を最小化しつつ最新の form を参照できる
@@ -109,8 +109,16 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
   const handleTextChange =
     (key: keyof SshFormState) =>
       (e: ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (key === 'port') {
+          // 数字のみを許可し、空文字の場合は0とする（または入力を無視する）
+          if (value === '' || /^\d+$/.test(value)) {
+            setForm(prev => ({ ...prev, [key]: value === '' ? 0 : parseInt(value, 10) }));
+          }
+          return;
+        }
         // 関数形式の更新で stale state を回避
-        setForm(prev => ({ ...prev, [key]: e.target.value }));
+        setForm(prev => ({ ...prev, [key]: value }));
       };
 
   const handleConnect = (): void => {
@@ -143,6 +151,7 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
 
     setLoading(true);
     try {
+      console.log(makeRequestData(path, currentForm));
       const response = await axios.post(props.url, makeRequestData(path, currentForm));
       const { current_dir, dirs, files } = response.data;
 
@@ -208,20 +217,21 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
           <Typography variant="h6" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
             SSH Connection
           </Typography>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "2fr 0.6fr 1.2fr 2fr 1fr" }, gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 0.6fr 1.2fr 2fr 1fr' }, gap: 2 }}>
             <TextField
               label="SSH Host"
               fullWidth
               value={form.host}
-              onChange={handleTextChange("host")}
+              onChange={handleTextChange('host')}
               variant="outlined"
               size="small"
             />
             <TextField
               label="Port"
               fullWidth
-              value={form.port}
-              onChange={handleTextChange("port")}
+              type="number"
+              value={form.port === 0 ? '' : form.port}
+              onChange={handleTextChange('port')}
               placeholder="22"
               variant="outlined"
               size="small"
@@ -230,7 +240,7 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
               label="User"
               fullWidth
               value={form.user}
-              onChange={handleTextChange("user")}
+              onChange={handleTextChange('user')}
               variant="outlined"
               size="small"
             />
@@ -238,8 +248,8 @@ export const TreeFileExplorer: React.FC<TreeProps> = (props: TreeProps) => {
               label="Privatekey Path"
               fullWidth
               value={form.privateKeyPath}
-              onChange={handleTextChange("privateKeyPath")}
-              placeholder="~/.ssh/id_rsa"
+              onChange={handleTextChange('privateKeyPath')}
+              placeholder="id_rsa"
               variant="outlined"
               size="small"
             />
